@@ -17,7 +17,7 @@
 	},
 	autoload: {
 		psr-4: {
-			pospalPayment\: "src/pospalPayment/"
+			PospalPayment\: "src/PospalPayment/"
 		}
 	},
 	autoload-dev: {
