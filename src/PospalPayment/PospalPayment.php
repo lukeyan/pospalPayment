@@ -14,6 +14,9 @@ class PospalPayment {
     protected $memberChargeUrl = "pospal-api2/openapi/v1/customerOpenApi/updateBalancePointByIncrement"; //充值
     protected $memberDischargeUrl = "pospal-api2/openapi/v1/customerOpenApi/updateBalancePointByIncrement"; //扣款
 
+
+    protected $members=[];
+
 	public function __construct($appId,$appKey,$urlPreFix) {
         $this->appId = $appId;
         $this->appKey = $appKey;
@@ -30,13 +33,27 @@ class PospalPayment {
      * 获取所有的系统会员
      *
      */
-    public function members()
+    public function members($postBackParameter=[])
     {
         $http = $this->urlPreFix.$this->getMembersUrl;
 
-        $arr = [
+        if(empty($postBackParameter))
+        {
+            $arr = [
                 'appId'=>$this->appId
-        ];
+            ];
+        }
+        else
+        {
+            $arr = [
+                'appId'=>$this->appId,
+                'postBackParameter'=>[
+                    'parameterType'=>$postBackParameter['parameterType'],
+                    'parameterValue'=>$postBackParameter['parameterValue']
+                ]
+            ];
+        }
+
 
         $jsondata = json_encode($arr);
 
@@ -44,9 +61,23 @@ class PospalPayment {
 
         $result = $this->https_request($http,$jsondata,$signature);
 
-        $obj = json_decode($result,true);
+        $obj = json_decode($result,true,512,JSON_BIGINT_AS_STRING);
 
-        return $obj;
+        foreach ($obj['data']['result'] as $row)
+        {
+            array_push($this->members,$row);
+        }
+
+        if(count($obj['data']['result']) < $obj['data']['pageSize'])
+        {
+
+        }
+        else
+        {
+            $this->members($obj['data']['postBackParameter']);
+        }
+
+        return $this->members;
 
 
     }
@@ -78,7 +109,7 @@ class PospalPayment {
     /**
      * 新建单个会员
      */
-    public function member_create($number,$phone,$password)
+    public function member_create($number,$name,$phone,$password)
     {
 
         $http = $this->urlPreFix.$this->createMemberUrl;
@@ -88,7 +119,7 @@ class PospalPayment {
             "customerInfo"=>[
                 "categoryName"=>"",
                 "number"=>$number,
-                "name"=> "API创建",
+                "name"=> $name,
                 "point"=>0,
                 "discount"=>0,
                 "balance"=>0,
@@ -123,7 +154,7 @@ class PospalPayment {
      * 更新会员个人信息
      *
      */
-    public function update_member_profile($customerUid,$phone)
+    public function update_member_profile($customerUid,$enable,$phone)
     {
 
 
@@ -133,6 +164,7 @@ class PospalPayment {
             "appId"=> $this->appId,	//Pospal配置的访问凭证
             "customerInfo"=>[
                 "customerUid"=>$customerUid,
+                "enable"=>$enable,
                 "phone"=>$phone
             ]
         ];
@@ -179,52 +211,27 @@ class PospalPayment {
      */
     public function member_charge($customerUid,$amount,$point)
     {
-//        $http = $this->urlPreFix.$this->memberChargeUrl;
+        $http = $this->urlPreFix.$this->memberChargeUrl;
 
-//        $http= "https://area13-win.pospal.cn:443/pospal-api2/openapi/v1/customerOpenApi/updateBalancePointByIncrement";
-//        $appKey = '42877429933036127';
-//        $appId =  '24415F0CC01D186B32992572C7B72311';
-//        $arr = [
-//            "appId"=> $appId,	//Pospal配置的访问凭证
-//            "customerUid"=>1145711311356864400,
-//            "balanceIncrement"=>1,
-//            "pointIncrement"=>1,
-//            "dataChangeTime"=>date("Y-m-d H:i:s")
-//        ];
-//
-//        $jsondata = json_encode($arr);
-//
-//        $signature = strtoupper(md5($appKey.$jsondata));
-//        $row = $this->https_request($http,$jsondata,$signature);
-//        $obj = json_decode($row,true);
-//
-//        return $obj;
+        $arr = [
+            "appId"=> $this->appId,	//Pospal配置的访问凭证
+            "customerUid"=>(int)$customerUid,
+            "balanceIncrement"=>$amount,
+            "pointIncrement"=>$point,
+            "dataChangeTime"=>date("Y-m-d H:i:s")
+
+        ];
+
+        $jsondata = json_encode($arr);
 
 
+        $signature = $this->get_signature($this->appKey,$jsondata);
 
-        
+        $result = $this->https_request($http,$jsondata,$signature);
 
+        $obj = json_decode($result,true);
 
-
-//        $arr = [
-//            "appId"=> $this->appId,	//Pospal配置的访问凭证
-//            "customerUid"=>(int)$customerUid,
-//            "balanceIncrement"=>$amount,
-//            "pointIncrement"=>$point,
-//            "dataChangeTime"=>date("Y-m-d H:i:s")
-//
-//        ];
-//
-//        $jsondata = json_encode($arr);
-//
-//
-//        $signature = $this->get_signature($this->appKey,$jsondata);
-//
-//        $result = $this->https_request($http,$jsondata,$signature);
-//
-//        $obj = json_decode($result,true);
-//
-//        return $obj;
+        return $obj;
     }
 
     /**
@@ -232,9 +239,30 @@ class PospalPayment {
      * 扣费 -余额
      *
      */
-    public function member_discharge($customerUid,$amount)
+    public function  member_discharge($customerUid,$amount,$point)
     {
 
+        $http = $this->urlPreFix.$this->memberChargeUrl;
+
+        $arr = [
+            "appId"=> $this->appId,	//Pospal配置的访问凭证
+            "customerUid"=>(int)$customerUid,
+            "balanceIncrement"=>$amount*(-1),
+            "pointIncrement"=>$point,
+            "dataChangeTime"=>date("Y-m-d H:i:s")
+
+        ];
+
+        $jsondata = json_encode($arr);
+
+
+        $signature = $this->get_signature($this->appKey,$jsondata);
+
+        $result = $this->https_request($http,$jsondata,$signature);
+
+        $obj = json_decode($result,true);
+
+        return $obj;
     }
 
     /**
