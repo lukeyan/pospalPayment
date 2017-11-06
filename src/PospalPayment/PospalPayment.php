@@ -17,17 +17,17 @@ class PospalPayment {
 
     protected $members=[];
 
-	public function __construct($appId,$appKey,$urlPreFix) {
+    public function __construct($appId,$appKey,$urlPreFix) {
         $this->appId = $appId;
         $this->appKey = $appKey;
         $this->urlPreFix = $urlPreFix;
-	}
+    }
 
-//	//test return
-//	public function test()
-//	{
-//		echo "test";
-//	}
+//  //test return
+//  public function test()
+//  {
+//      echo "test";
+//  }
 
     /**
      * 获取所有的系统会员
@@ -91,7 +91,7 @@ class PospalPayment {
         $http = $this->urlPreFix.$this->getMemberUrl;
 
         $arr = [
-            "appId"=> $this->appId,	//Pospal配置的访问凭证
+            "appId"=> $this->appId, //Pospal配置的访问凭证
             "customerNum"=>$customerNum
         ];
 
@@ -109,20 +109,20 @@ class PospalPayment {
     /**
      * 新建单个会员
      */
-    public function member_create($number,$name,$phone,$password)
+    public function member_create($number,$name,$phone,$password,$balance=0,$point=0,$discount=100)
     {
 
         $http = $this->urlPreFix.$this->createMemberUrl;
 
         $arr = [
-            "appId"=> $this->appId,	//Pospal配置的访问凭证
+            "appId"=> $this->appId, //Pospal配置的访问凭证
             "customerInfo"=>[
                 "categoryName"=>"",
                 "number"=>$number,
                 "name"=> $name,
-                "point"=>0,
-                "discount"=>0,
-                "balance"=>0,
+                "point"=>$point,
+                "discount"=>$discount,
+                "balance"=>$balance,
                 "phone"=> $phone,
                 "birthday"=> "",
                 "qq"=> "",
@@ -161,7 +161,7 @@ class PospalPayment {
         $http = $this->urlPreFix.$this->updateMemberProfileUrl;
 
         $arr = [
-            "appId"=> $this->appId,	//Pospal配置的访问凭证
+            "appId"=> $this->appId, //Pospal配置的访问凭证
             "customerInfo"=>[
                 "customerUid"=>$customerUid,
                 "enable"=>$enable,
@@ -214,7 +214,7 @@ class PospalPayment {
         $http = $this->urlPreFix.$this->memberChargeUrl;
 
         $arr = [
-            "appId"=> $this->appId,	//Pospal配置的访问凭证
+            "appId"=> $this->appId, //Pospal配置的访问凭证
             "customerUid"=>(int)$customerUid,
             "balanceIncrement"=>$amount,
             "pointIncrement"=>$point,
@@ -245,7 +245,7 @@ class PospalPayment {
         $http = $this->urlPreFix.$this->memberChargeUrl;
 
         $arr = [
-            "appId"=> $this->appId,	//Pospal配置的访问凭证
+            "appId"=> $this->appId, //Pospal配置的访问凭证
             "customerUid"=>(int)$customerUid,
             "balanceIncrement"=>$amount*(-1),
             "pointIncrement"=>$point,
@@ -298,9 +298,9 @@ class PospalPayment {
         curl_setopt($curl, CURLOPT_URL, $url);         // 要访问的地址
         curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, 0); // 对认证证书来源的检查
         curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, 0); // 从证书中检查SSL加密算法是否存在
-        curl_setopt($curl, CURLOPT_POSTFIELDS, $data);		// Post提交的数据包
+        curl_setopt($curl, CURLOPT_POSTFIELDS, $data);      // Post提交的数据包
 
-        curl_setopt($curl, CURLOPT_POST, 1);		// 发送一个常规的Post请求
+        curl_setopt($curl, CURLOPT_POST, 1);        // 发送一个常规的Post请求
 
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);// 获取的信息以文件流的形式返回
         $output = curl_exec($curl); // 执行操作
