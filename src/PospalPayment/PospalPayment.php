@@ -13,6 +13,8 @@ class PospalPayment {
     protected $updateMemberProfileUrl = "pospal-api2/openapi/v1/customerOpenApi/updateBaseInfo";//修改单个用户资料
     protected $memberChargeUrl = "pospal-api2/openapi/v1/customerOpenApi/updateBalancePointByIncrement"; //充值
     protected $memberDischargeUrl = "pospal-api2/openapi/v1/customerOpenApi/updateBalancePointByIncrement"; //扣款
+    
+    protected $queryDailyAccessTimesLogUrl = "pospal-api2/openapi/v1/openApiLimitAccess/queryDailyAccessTimesLog"; //查询余量
 
 
     protected $members=[];
@@ -251,6 +253,34 @@ class PospalPayment {
             "pointIncrement"=>$point,
             "dataChangeTime"=>date("Y-m-d H:i:s")
 
+        ];
+
+        $jsondata = json_encode($arr);
+
+
+        $signature = $this->get_signature($this->appKey,$jsondata);
+
+        $result = $this->https_request($http,$jsondata,$signature);
+
+        $obj = json_decode($result,true);
+
+        return $obj;
+    }
+    
+
+    /**
+     *
+     *  查询API余量
+     *
+     */
+    public function  get_daily_limit($bdate,$edate)
+    {
+        $http = $this->urlPreFix.$this->queryDailyAccessTimesLogUrl;
+
+        $arr = [
+            "appId"=> $this->appId, //Pospal配置的访问凭证
+            "beginDate"=>$bdate,
+            "endDate"=>$edate
         ];
 
         $jsondata = json_encode($arr);
