@@ -336,6 +336,7 @@ class PospalPayment {
             "time-stamp: ".$time,
             "data-signature: ".$signature
         ));
+        curl_setopt($curl, CURLOPT_ENCODING, "gzip");
         curl_setopt($curl, CURLOPT_URL, $url);         // 要访问的地址
         curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, 0); // 对认证证书来源的检查
         curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, 0); // 从证书中检查SSL加密算法是否存在
