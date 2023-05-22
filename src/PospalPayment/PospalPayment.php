@@ -64,22 +64,33 @@ class PospalPayment {
         $result = $this->https_request($http,$jsondata,$signature);
 
         $obj = json_decode($result,true,512,JSON_BIGINT_AS_STRING);
-
-        foreach ($obj['data']['result'] as $row)
+        
+        if($obj['data']['result'])
         {
-            array_push($this->members,$row);
-        }
+            foreach ($obj['data']['result'] as $row)
+            {
+                array_push($this->members,$row);
+            }
 
-        if(count($obj['data']['result']) < $obj['data']['pageSize'])
-        {
+            if(count($obj['data']['result']) < $obj['data']['pageSize'])
+            {
 
+            }
+            else
+            {
+                $this->members($obj['data']['postBackParameter']);
+            }
+
+            return $this->members;
         }
         else
         {
-            $this->members($obj['data']['postBackParameter']);
+            return $obj['data'];
         }
+            
+            
 
-        return $this->members;
+        
 
 
     }
